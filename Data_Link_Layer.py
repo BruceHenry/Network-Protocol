@@ -18,6 +18,7 @@ class dataLinkLayer:
 
     def send(self, buffer):
         self.buffer = buffer
+        self.p.send()
 
     def receive(self):
         self.p.send(self.seq, self.ack)
@@ -27,10 +28,17 @@ class dataLinkLayer:
         self.seq += 1
         ack = seq + 1
         message = str(self.seq) + " " + str(ack)
-        self.p.send(message)
+        return message
 
     def go_back_n(self):
-        pass
+        base = 0
+        next_seq = 0
+        ack=0
+        while True:
+            if next_seq < base + self.windowSize:
+                message=self.send_ack()+" "+str(self.send_buffer[])
+                self.p.send()
+
 
     def selective_repeat(self):
         pass
