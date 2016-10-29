@@ -1,5 +1,5 @@
 from Physical_Layer import physicalLayer
-
+import threading
 
 class packet:
     seq = 0
@@ -38,6 +38,21 @@ class dataLinkLayer:
             if next_seq < base + self.windowSize:
                 message=self.send_ack()+" "+str(self.send_buffer[])
                 self.p.send()
+
+    def retransmit(self):
+        pass
+
+
+
+    #Return a timer object
+    #Use timer.cancel() to stop the timer
+    def timer(self,timeout):
+        timer = threading.Timer(timeout, self.retransmit())
+        return timer
+
+
+
+
 
 
     def selective_repeat(self):
