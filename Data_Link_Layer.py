@@ -17,7 +17,6 @@ class packet:
 
 
 class dataLinkLayer:
-    p = physicalLayer()
     windowSize = 5
     send_buffer = []
     receive_buffer = []
@@ -27,8 +26,9 @@ class dataLinkLayer:
     base = 0
     next_seq = 0
 
-    def __init__(self):
-        t = self.timer(3)
+    def __init__(self, port):
+        self.p = physicalLayer("127.0.0.1", port, self)
+        self.t = self.timer(3)
 
     def send(self, mode, buffer):
         if mode == 1:
@@ -40,9 +40,9 @@ class dataLinkLayer:
         else:
             return -1
 
-    def receive(self, mode):
+    def receive(self, mode, data):
         if mode == 1:
-            self.go_back_n_receiver()
+            self.go_back_n_receiver(data)
             return 1
         elif mode == 2:
             self.selective_repeat_receiver()
@@ -82,14 +82,14 @@ class dataLinkLayer:
             self.p.send(self.make_packet(self.send_buffer[i]))
 
     # the receiver in go_back_n
-    def go_back_n_receiver(self):
-        buffer = self.p.receive()
+    def go_back_n_receiver(self, buffer):
+        #buffer = self.p.receive()
         packet = buffer.split(" ")
-        seq = packet[0]
+        seq = int(packet[0])
         ack = int(packet[1])
-        checksum = packet[2]
+        checksum = int(packet[2])
         if not ack:
-            data = packet[3]
+            data = int(packet[3])
             valid = self.ichecksum(seq + ack + data, checksum)
             ack_pkt = packet("")
             if (not valid and self.next_expected_seq == seq):
@@ -121,7 +121,7 @@ class dataLinkLayer:
     def setTimer(self):
         self.t = self.timer(3)
 
-    def ichecksum(data, sum=0):
+    def ichecksum(self, data, sum=0):
         """ Compute the Internet Checksum of the supplied data.  The checksum is
         initialized to zero.  Place the return value in the checksum field of a
         packet.  When the packet is received, check the checksum, by passing
@@ -151,3 +151,14 @@ class dataLinkLayer:
 
     def selective_repeat_receiver(self):
         pass
+
+        return sum & 0xFFFF
+
+    def selective_repeat_sender(self):
+        pass
+
+    def selective_repeat_receiver(self):
+        pass
+
+d = dataLinkLayer(5425)
+d.send(1, 'blahblahblah')

@@ -1,10 +1,9 @@
 import socket
 import threading
-import SocketServer
+import socketserver
 import random
 
-
-framesize = 1024l
+framesize = 1024
 chance_of_fail = 0
 chance_of_corruption = 10
 
@@ -25,7 +24,7 @@ def is_corrupted(chance_of_corruption):
 
 class Frame():
     def __init__(self, data):
-        self.data = '[' + data + ']'
+        self.data =  data
 
     def data(self):
         return self.data
@@ -37,42 +36,49 @@ class Frame():
         self.data[random.randint(0,len(data))] = '?'
 
 
-class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
-class physicalLayer(SocketServer.BaseRequestHandler):
+class physicalRequestHandler(socketserver.BaseRequestHandler):
+
+        def handle(self):
+            data = str(self.request.recv(framesize),'utf-8')
+            print (data)
+            self.server.data_layer.receive(1,data)
+
+
+class physicalLayer():
     def __init__(self, ip, port, data_layer):
         self.ip = ip
         self.port = port
-        self.data_layer = data_layer
 
-        self.server = ThreadedTCPServer(('localhost', self.port), self)
+        self.server = ThreadedTCPServer(('localhost', self.port), physicalRequestHandler)
 
-        self.server_thread = threading.Thread(target=server.serve_forever)
+        self.server_thread = threading.Thread(target=self.server.serve_forever)
+
+        self.server.data_layer = data_layer
 
         self.server_thread.daemon = True
         self.server_thread.start()
 
-        print "Server loop running in thread:", server_thread.name
+
+        print ("Server loop running in thread:", self.server_thread.name)
+
 
     def send(self, data):
-        f = frame(data)
+        f = Frame(data)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((self.ip, self.port))
         try:
             if(is_dropped(chance_of_fail)):
-                print 'Corrupted frame'
+                print ('Corrupted frame')
             else:
                 if(is_corrupted(chance_of_corruption)):
-                    frame.add_corruption()
-                sock.sendall(frame.data())
+                    f.add_corruption()
+                sock.sendall(bytes(f.data, 'utf-8'))
                 response = sock.recv(framesize)
         finally:
             sock.close()
-
-    def handle(self):
-        data = self.request.recv(framesize)
-        self.data_layer.receive()
 
     def destroy(self):
         self.server.shutdown()
