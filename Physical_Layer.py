@@ -55,7 +55,6 @@ class physicalLayer(SocketServer.BaseRequestHandler):
 
         print "Server loop running in thread:", server_thread.name
 
-
     def send(self, data):
         f = frame(data)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
