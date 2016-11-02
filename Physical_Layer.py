@@ -31,10 +31,10 @@ class Frame():
         return self.data
 
     def add_corruption(self):
-        self.data[random.randint(0,framesize)] = '*'
-        self.data[random.randint(0,framesize)] = '5'
-        self.data[random.randint(0,framesize)] = 'V'
-        self.data[random.randint(0,framesize)] = '?'
+        self.data[random.randint(0,len(data))] = '*'
+        self.data[random.randint(0,len(data))] = '5'
+        self.data[random.randint(0,len(data))] = 'V'
+        self.data[random.randint(0,len(data))] = '?'
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
