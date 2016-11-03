@@ -1,4 +1,5 @@
 import socket
+import _thread
 import threading
 import socketserver
 import random
@@ -26,62 +27,71 @@ def is_corrupted(chance_of_corruption):
 
 class Frame():
     def __init__(self, data):
-        self.data = '[' + data + ']'
+        self.data = data
 
-    def getdata(self):
+    def data(self):
         return self.data
 
     def add_corruption(self):
         ls = list(self.data)
-        ls[random.randint(0, framesize)] = '*'
-        ls[random.randint(0, framesize)] = '5'
-        ls[random.randint(0, framesize)] = 'V'
-        ls[random.randint(0, framesize)] = '?'
+        ls[random.randint(0, len(self.data))] = '*'
+        ls[random.randint(0, len(self.data))] = '5'
+        ls[random.randint(0, len(self.data))] = 'V'
+        ls[random.randint(0, len(self.data))] = '?'
         self.data = ''.join(ls)
 
 
-class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    pass
+# class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+#     pass
 
 
-class physicalLayer(socketserver.BaseRequestHandler):
-    def __init__(self, ip, port, data_layer):
+# class physicalRequestHandler(socketserver.BaseRequestHandler):
+#     def handle(self):
+#         data = str(self.request.recv(framesize), 'utf-8')
+#         self.server.data_layer.receive(1, data)
+
+
+class physicalLayer():
+    def __init__(self, ip, port, data_layer, client_flag):
         self.ip = ip
         self.port = port
         self.data_layer = data_layer
-
-        self.server = ThreadedTCPServer(('localhost', self.port), self)
-
-        self.server_thread = threading.Thread(target=self.server.serve_forever)
-
-        self.server_thread.daemon = True
-        self.server_thread.start()
-
-        print("Server loop running in thread:", self.server_thread.name)
+        if not client_flag:
+            self.client_flag = 0
+            serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            serversocket.bind((self.ip, self.port))
+            serversocket.listen(5)
+            print("Server running and listening for client")
+            self.soc, addr = serversocket.accept()
+            self.client_flag = 0
+            _thread.start_new_thread(self.receive, (self, ) )
+            # self.server = ThreadedTCPServer(('localhost', self.port), physicalRequestHandler)
+            # self.server_thread = threading.Thread(target=self.server.serve_forever)
+            # self.server_thread.daemon = True
+            # self.server_thread.start()
+            # print("Server loop running in thread:", self.server_thread.name)
+        else:
+            self.client_flag = 1
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((self.ip, self.port))
+            self.soc = sock
 
     def send(self, data):
         f = Frame(data)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self.ip, self.port))
         try:
             if (is_dropped(chance_of_fail)):
                 print('Corrupted frame')
             else:
                 if (is_corrupted(chance_of_corruption)):
                     f.add_corruption()
-
-                print(f.getdata())
-
-                sock.sendall(f.getdata().encode())
-                response = sock.recv(framesize)
-                #print(response)
-        finally:
-            sock.close()
-
-    def handle(self):
-        data = self.request.recv(framesize)
-        self.data_layer.go_back_n_receiver(data)
+            self.soc.sendall(bytes(f.data, 'utf-8'))
+        except:
+            self.soc.close()
 
     def destroy(self):
-        self.server.shutdown()
-        self.server.server_close()
+        self.soc.close()
+
+    def receive(self):
+        while(True):
+            data = str(self.soc.recv(framesize), 'utf-8')
+            self.data_layer.receive(1, data)

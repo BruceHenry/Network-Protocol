@@ -40,9 +40,9 @@ class dataLinkLayer:
         else:
             return -1
 
-    def receive(self, mode):
+    def receive(self, mode, data):
         if mode == 1:
-            self.go_back_n_receiver()
+            self.go_back_n_receiver(data)
             return 1
         elif mode == 2:
             self.selective_repeat_receiver()
@@ -84,13 +84,14 @@ class dataLinkLayer:
     # the receiver in go_back_n
     def go_back_n_receiver(self, buffer):
         #buffer = self.p.receive()
-        packet = buffer.split(" ")
-        seq = packet[0]
-        ack = int(packet[1])
-        checksum = packet[2]
+        print("receive:::",buffer)
+        packet_slice = buffer.split(" ")
+        seq = int(packet_slice[0])
+        ack = int(packet_slice[1])
+        checksum = int(packet_slice[2])
         if not ack:
-            data = packet[3]
-            valid = self.ichecksum(seq + ack + data, checksum)
+            data = packet_slice[3]
+            valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
             ack_pkt = packet("")
             if (not valid and self.next_expected_seq == seq):
                 ack_pkt.set_seq_ack(self.next_expected_seq, 1)
@@ -103,7 +104,7 @@ class dataLinkLayer:
                 self.p.send(self.make_packet(ack_pkt))
                 return False
         else:
-            valid = self.ichecksum(seq + ack, checksum)
+            valid = self.ichecksum(str(seq + ack), checksum)
             if (not valid and self.base == int(seq)):
                 self.base = int(seq) + 1
                 if self.base == self.next_seq:
@@ -152,3 +153,13 @@ class dataLinkLayer:
     def selective_repeat_receiver(self):
         pass
 
+        return sum & 0xFFFF
+
+    def selective_repeat_sender(self):
+        pass
+
+    def selective_repeat_receiver(self):
+        pass
+
+# d = dataLinkLayer(5425)
+# d.send(1, 'blahblahblah')
