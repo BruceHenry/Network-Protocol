@@ -28,7 +28,7 @@ class dataLinkLayer:
 
     def __init__(self, port,client_flag):
         self.p = physicalLayer("127.0.0.1", port, self,client_flag)
-        self.t = self.timer(3)
+        self.t = self.timer(1)
 
     def send(self, mode, buffer):
         if mode == 1:
@@ -87,10 +87,14 @@ class dataLinkLayer:
     def go_back_n_receiver(self, buffer):
         #buffer = self.p.receive()
         print("go_back_n_receiver:",buffer)
-        packet_slice = buffer.split(" ")
-        seq = int(packet_slice[0])
-        ack = int(packet_slice[1])
-        checksum = int(packet_slice[2])
+        packet_slice = buffer.split(" ", 3)
+        try:
+            seq = int(packet_slice[0])
+            ack = int(packet_slice[1])
+            checksum = int(packet_slice[2])
+        except:
+            return
+
         if not ack:
             data = packet_slice[3]
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
@@ -106,7 +110,7 @@ class dataLinkLayer:
                 self.p.send(self.make_packet(ack_pkt))
                 return False
         else:
-            valid = self.ichecksum(str(seq + ack), checksum)
+            valid = self.ichecksum(str(seq) + str(ack), checksum)
             if (not valid and self.base == int(seq)):
                 self.base = int(seq) + 1
                 if self.base == self.next_seq:
@@ -122,7 +126,7 @@ class dataLinkLayer:
         return timer
 
     def setTimer(self):
-        self.t = self.timer(3)
+        self.t = self.timer(1)
 
     def ichecksum(self, data, sum=0):
         """ Compute the Internet Checksum of the supplied data.  The checksum is

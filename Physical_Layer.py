@@ -98,5 +98,5 @@ def receive(dl):
     print("Receive thread created")
     while (True):
         data = str(dl.soc.recv(framesize), 'utf-8')
-        print("phyical receiver:", data)
+        #print("phyical receiver:", data)
         dl.data_layer.receive(1, data)
