@@ -26,8 +26,8 @@ class dataLinkLayer:
     base = 0
     next_seq = 0
 
-    def __init__(self, port):
-        self.p = physicalLayer("127.0.0.1", port, self)
+    def __init__(self, port,client_flag):
+        self.p = physicalLayer("127.0.0.1", port, self,client_flag)
         self.t = self.timer(3)
 
     def send(self, mode, buffer):

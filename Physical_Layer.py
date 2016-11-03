@@ -4,6 +4,8 @@ import threading
 import socketserver
 import random
 
+import time
+
 framesize = 1024
 chance_of_fail = 0
 chance_of_corruption = 10
@@ -64,7 +66,8 @@ class physicalLayer():
             print("Server running and listening for client")
             self.soc, addr = serversocket.accept()
             self.client_flag = 0
-            _thread.start_new_thread(self.receive, (self, ) )
+            time.sleep(2)
+            _thread.start_new_thread(receive, (self,) )
             # self.server = ThreadedTCPServer(('localhost', self.port), physicalRequestHandler)
             # self.server_thread = threading.Thread(target=self.server.serve_forever)
             # self.server_thread.daemon = True
@@ -75,6 +78,7 @@ class physicalLayer():
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((self.ip, self.port))
             self.soc = sock
+            _thread.start_new_thread(receive, (self,))
 
     def send(self, data):
         f = Frame(data)
@@ -91,7 +95,10 @@ class physicalLayer():
     def destroy(self):
         self.soc.close()
 
-    def receive(self):
-        while(True):
-            data = str(self.soc.recv(framesize), 'utf-8')
-            self.data_layer.receive(1, data)
+
+def receive(dl):
+    print("Receive thread created")
+    while (True):
+        data = str(dl.soc.recv(framesize), 'utf-8')
+        print(data)
+        dl.data_layer.receive(1, data)
