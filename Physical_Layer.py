@@ -65,8 +65,6 @@ class physicalLayer():
             serversocket.listen(5)
             print("Server running and listening for client")
             self.soc, addr = serversocket.accept()
-            self.client_flag = 0
-            time.sleep(2)
             _thread.start_new_thread(receive, (self,) )
             # self.server = ThreadedTCPServer(('localhost', self.port), physicalRequestHandler)
             # self.server_thread = threading.Thread(target=self.server.serve_forever)
@@ -100,5 +98,5 @@ def receive(dl):
     print("Receive thread created")
     while (True):
         data = str(dl.soc.recv(framesize), 'utf-8')
-        print(data)
+        print("phyical receiver:", data)
         dl.data_layer.receive(1, data)

@@ -65,6 +65,7 @@ class dataLinkLayer:
             self.send_buffer.append(packet)
             self.send_buffer[self.next_seq].set_seq_ack(self.next_seq, 0)
             self.p.send(self.make_packet(self.send_buffer[self.next_seq]))
+            print("go_back_n_send:", self.make_packet(self.send_buffer[self.next_seq]))
             if self.base == self.next_seq:
                 self.setTimer()
                 self.t.start()
@@ -80,11 +81,12 @@ class dataLinkLayer:
         self.t.start()
         for i in range(self.base, self.next_seq):
             self.p.send(self.make_packet(self.send_buffer[i]))
+            print("timeout re-send", self.make_packet(self.send_buffer[i]))
 
     # the receiver in go_back_n
     def go_back_n_receiver(self, buffer):
         #buffer = self.p.receive()
-        print("receive:::",buffer)
+        print("go_back_n_receiver:",buffer)
         packet_slice = buffer.split(" ")
         seq = int(packet_slice[0])
         ack = int(packet_slice[1])

@@ -1,4 +1,6 @@
 from Data_Link_Layer import dataLinkLayer
+import time
 
 dl=dataLinkLayer(5555,0)
-dl.send(1,"Hello world")
+while True:
+    time.sleep(1)
