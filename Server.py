@@ -1,30 +1,14 @@
-import socket
-import sys
+# from Data_Link_Layer import dataLinkLayer
+# import time
+#
+# dl = dataLinkLayer(5555, 0)
+# while True:
+#     time.sleep(1)
 
-serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-host = socket.gethostname()
-port = 9999
-serversocket.bind((host, port))
-serversocket.listen(5)
+import time
+from Application_Layer import Application_Layer
 
-clientsocket, addr = serversocket.accept()
-fileName = "receivedFile.txt"
-f = open(fileName, "wb")
+app = Application_Layer(0)
 while True:
-    buffer = clientsocket.recv(256)
-    f.write(buffer)
-f.close()
-
-
-while True:
-    clientsocket, addr = serversocket.accept()
-    print("Address: %s" % str(addr))
-    msg = 'Welcom!' + "\r\n"
-    clientsocket.send(msg.encode('utf-8'))
-    while True:
-        msg = input()
-        clientsocket.send(msg.encode('utf-8'))
-        if msg == "end":
-            break
-    clientsocket.close()
+    time.sleep(1)

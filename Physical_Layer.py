@@ -7,8 +7,8 @@ import random
 import time
 
 framesize = 1024
-chance_of_fail = 5
-chance_of_corruption = 5
+chance_of_fail = 2
+chance_of_corruption = 2
 
 
 def is_dropped(chance_of_fail):
@@ -29,7 +29,7 @@ def is_corrupted(chance_of_corruption):
         return False
 
 
-class Frame():
+class Frame:
     def __init__(self, data):
         self.data = data
 
@@ -84,7 +84,8 @@ class physicalLayer():
         f = Frame(data)
         try:
             if (is_dropped(chance_of_fail)):
-                print('Corrupted frame')
+                #print('Corrupted frame')
+                pass
             else:
                 if (is_corrupted(chance_of_corruption)):
                     f.add_corruption()

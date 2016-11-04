@@ -17,7 +17,7 @@ class packet:
 
 
 class dataLinkLayer:
-    windowSize = 10
+    windowSize = 5
     send_buffer = []
     receive_buffer = []
 
@@ -29,36 +29,43 @@ class dataLinkLayer:
     def __init__(self, ip, port, client_flag, application_layer):
         self.p = physicalLayer(ip, port, self, client_flag)
         self.app = application_layer
-        self.t = self.timer(1)
+        self.t = self.timer(0.5)
 
     def send(self, mode, buffer):
         if mode == 1:
-            self.go_back_n_send(packet(buffer))
-            return 1
+            if self.go_back_n_send(packet(buffer)):
+                return True
+            else:
+                return False
+
         elif mode == 2:
-            self.selective_repeat_sender()
-            return 1
-        else:
-            return -1
+            if self.selective_repeat_sender():
+                return True
+            else:
+                return False
 
     def receive(self, mode, data):
         if mode == 1:
-            self.go_back_n_receiver(data)
-            return 1
+            if self.go_back_n_receiver(data):
+                return True
+            else:
+                return False
+
         elif mode == 2:
-            self.selective_repeat_receiver()
-            return 1
-        else:
-            return -1
+            if self.selective_repeat_receiver():
+                return True
+            else:
+                return False
+
 
     def make_packet(self, pkt):
         packet_without_checksum = str(pkt.seq) + str(pkt.ack) + pkt.buffer
         checksum = self.ichecksum(packet_without_checksum)
         return str(pkt.seq) + " " + str(pkt.ack) + " " + str(checksum) + " " + pkt.buffer
 
-    def refuse(self, packet):
-        print("Window full, cannot send data now")
-        return False
+    # def refuse(self, packet):
+    #     print("Window full, cannot send data now")
+    #     return False
 
     def go_back_n_send(self, packet):
         # send
@@ -66,14 +73,15 @@ class dataLinkLayer:
             self.send_buffer.append(packet)
             self.send_buffer[self.next_seq].set_seq_ack(self.next_seq, 0)
             self.p.send(self.make_packet(self.send_buffer[self.next_seq]))
-            print("go_back_n_send:", self.make_packet(self.send_buffer[self.next_seq]))
+            print("go_back_n_send:", self.send_buffer[self.next_seq].seq, self.send_buffer[self.next_seq].ack)
             if self.base == self.next_seq:
                 self.setTimer()
                 self.t.start()
             self.next_seq += 1
             return True
         else:
-            self.refuse(packet)
+            print("Window full, cannot send data now")
+            return False
 
     def go_back_n_timeout(self):
         # Timeout
@@ -82,12 +90,12 @@ class dataLinkLayer:
         self.t.start()
         for i in range(self.base, self.next_seq):
             self.p.send(self.make_packet(self.send_buffer[i]))
-            print("timeout re-send", self.make_packet(self.send_buffer[i]))
+            print("timeout re-send", self.send_buffer[i].seq, self.send_buffer[i].ack)
 
     # the receiver in go_back_n
     def go_back_n_receiver(self, buffer):
         # buffer = self.p.receive()
-        print("go_back_n_receiver:", buffer)
+        print("go_back_n_receiver:", buffer[:22])
         packet_slice = buffer.split(" ", 3)
         if len(packet_slice) != 4:
             return False
@@ -108,6 +116,9 @@ class dataLinkLayer:
                 self.next_expected_seq += 1
                 # return data
                 self.app.receive(data)
+            elif not valid and self.next_expected_seq > seq:
+                ack_pkt.set_seq_ack(seq, 1)
+                self.p.send(self.make_packet(ack_pkt))
 
             elif self.next_expected_seq != seq:
                 print("Out of order packet")
@@ -131,7 +142,7 @@ class dataLinkLayer:
         return timer
 
     def setTimer(self):
-        self.t = self.timer(1)
+        self.t = self.timer(0.5)
 
     def ichecksum(self, data, sum=0):
         """ Compute the Internet Checksum of the supplied data.  The checksum is
