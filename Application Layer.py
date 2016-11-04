@@ -1,2 +1,0 @@
-class applicationLayer:
-    pass

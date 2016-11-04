@@ -26,8 +26,9 @@ class dataLinkLayer:
     base = 0
     next_seq = 0
 
-    def __init__(self, port, client_flag):
-        self.p = physicalLayer("127.0.0.1", port, self, client_flag)
+    def __init__(self, ip, port, client_flag, application_layer):
+        self.p = physicalLayer(ip, port, self, client_flag)
+        self.app = application_layer
         self.t = self.timer(1)
 
     def send(self, mode, buffer):
@@ -105,7 +106,9 @@ class dataLinkLayer:
                 ack_pkt.set_seq_ack(self.next_expected_seq, 1)
                 self.p.send(self.make_packet(ack_pkt))
                 self.next_expected_seq += 1
-                return data
+                # return data
+                self.app.receive(data)
+
             elif self.next_expected_seq != seq:
                 print("Out of order packet")
                 ack_pkt.set_seq_ack(self.next_expected_seq - 1, 1)
