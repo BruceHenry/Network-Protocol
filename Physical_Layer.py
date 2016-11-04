@@ -7,13 +7,14 @@ import random
 import time
 
 framesize = 1024
-chance_of_fail = 0
-chance_of_corruption = 10
+chance_of_fail = 5
+chance_of_corruption = 5
 
 
 def is_dropped(chance_of_fail):
     number = random.randint(1, 100)
     if number <= chance_of_fail:
+        print("A packet is dropped")
         return True
     else:
         return False
@@ -22,6 +23,7 @@ def is_dropped(chance_of_fail):
 def is_corrupted(chance_of_corruption):
     number = random.randint(1, 100)
     if number <= chance_of_corruption:
+        print("A packet is corrupted")
         return True
     else:
         return False
@@ -65,7 +67,7 @@ class physicalLayer():
             serversocket.listen(5)
             print("Server running and listening for client")
             self.soc, addr = serversocket.accept()
-            _thread.start_new_thread(receive, (self,) )
+            _thread.start_new_thread(receive, (self,))
             # self.server = ThreadedTCPServer(('localhost', self.port), physicalRequestHandler)
             # self.server_thread = threading.Thread(target=self.server.serve_forever)
             # self.server_thread.daemon = True
@@ -86,9 +88,10 @@ class physicalLayer():
             else:
                 if (is_corrupted(chance_of_corruption)):
                     f.add_corruption()
-            self.soc.sendall(bytes(f.data, 'utf-8'))
+                self.soc.sendall(bytes(f.data, 'utf-8'))
         except:
-            self.soc.close()
+            pass
+            #self.soc.close()
 
     def destroy(self):
         self.soc.close()
@@ -97,6 +100,11 @@ class physicalLayer():
 def receive(dl):
     print("Receive thread created")
     while (True):
-        data = str(dl.soc.recv(framesize), 'utf-8')
-        #print("phyical receiver:", data)
+        try:
+            data = str(dl.soc.recv(framesize), 'utf-8')
+        except:
+            continue
+        # print("phyical receiver:", data)
+        if data == "":
+            continue
         dl.data_layer.receive(1, data)

@@ -17,7 +17,7 @@ class packet:
 
 
 class dataLinkLayer:
-    windowSize = 5
+    windowSize = 10
     send_buffer = []
     receive_buffer = []
 
@@ -26,8 +26,8 @@ class dataLinkLayer:
     base = 0
     next_seq = 0
 
-    def __init__(self, port,client_flag):
-        self.p = physicalLayer("127.0.0.1", port, self,client_flag)
+    def __init__(self, port, client_flag):
+        self.p = physicalLayer("127.0.0.1", port, self, client_flag)
         self.t = self.timer(1)
 
     def send(self, mode, buffer):
@@ -85,20 +85,22 @@ class dataLinkLayer:
 
     # the receiver in go_back_n
     def go_back_n_receiver(self, buffer):
-        #buffer = self.p.receive()
-        print("go_back_n_receiver:",buffer)
+        # buffer = self.p.receive()
+        print("go_back_n_receiver:", buffer)
         packet_slice = buffer.split(" ", 3)
+        if len(packet_slice) != 4:
+            return False
         try:
             seq = int(packet_slice[0])
             ack = int(packet_slice[1])
             checksum = int(packet_slice[2])
+            data = packet_slice[3]
         except:
-            return
+            return False
 
         if not ack:
-            data = packet_slice[3]
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
-            ack_pkt = packet("")
+            ack_pkt = packet("ACK")
             if (not valid and self.next_expected_seq == seq):
                 ack_pkt.set_seq_ack(self.next_expected_seq, 1)
                 self.p.send(self.make_packet(ack_pkt))
@@ -110,7 +112,7 @@ class dataLinkLayer:
                 self.p.send(self.make_packet(ack_pkt))
                 return False
         else:
-            valid = self.ichecksum(str(seq) + str(ack), checksum)
+            valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
             if (not valid and self.base == int(seq)):
                 self.base = int(seq) + 1
                 if self.base == self.next_seq:
@@ -167,5 +169,5 @@ class dataLinkLayer:
     def selective_repeat_receiver(self):
         pass
 
-# d = dataLinkLayer(5425)
-# d.send(1, 'blahblahblah')
+        # d = dataLinkLayer(5425)
+        # d.send(1, 'blahblahblah')
