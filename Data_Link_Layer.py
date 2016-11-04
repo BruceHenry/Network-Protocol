@@ -116,9 +116,7 @@ class dataLinkLayer:
                 self.next_expected_seq += 1
                 # return data
                 self.app.receive(data)
-            elif not valid and self.next_expected_seq > seq:
-                ack_pkt.set_seq_ack(seq, 1)
-                self.p.send(self.make_packet(ack_pkt))
+
 
             elif self.next_expected_seq != seq:
                 print("Out of order packet")
@@ -127,7 +125,7 @@ class dataLinkLayer:
                 return False
         else:
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
-            if (not valid and self.base == int(seq)):
+            if (not valid and self.base <= int(seq)):
                 self.base = int(seq) + 1
                 if self.base == self.next_seq:
                     self.t.cancel()

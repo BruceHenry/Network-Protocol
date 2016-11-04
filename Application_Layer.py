@@ -9,15 +9,20 @@ import base64
 class Application_Layer:
     maxBytes = 256
     packet_format = 'COMMAND:{0}\nPIECES:{1}\nPIECENUM:{2}\nDATA:{3}'
+    commands = [ 'MSG', 'CALCULATE', 'RESPONSE','SENDFILE','UPLOAD']
 
     def __init__(self, client_flag):
         self.dl = dataLinkLayer("127.0.0.1", 5555, client_flag, self)
         self.received_buffer = []
+        self.client_flag=client_flag
 
     def send(self, input):
         command = input.split(" ")
-        if command[0] == "UPLOAD":
+        if command[0] == self.commands[4] and self.client_flag:
             self.send_file(command[1])
+
+
+
 
     def receive(self, buffer):
         # print("app received:", buffer, '\n----------')
@@ -26,7 +31,9 @@ class Application_Layer:
             self.received_buffer.append(data)
             if numpieces == piece:
                 self.make_file()
-        if commd == "EXIT":
+        elif commd == self.commands[3] and not self.client_flag:
+            self.send_file(str(data))
+        elif commd == "EXIT":
             self.destroy()
 
     def make_packet(self, command, message):
