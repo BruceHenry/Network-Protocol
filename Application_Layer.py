@@ -20,8 +20,9 @@ class Application_Layer:
         command = input.split(" ")
         if command[0] == self.commands[4] and self.client_flag:
             self.send_file(command[1])
-
-
+        if command[0] == self.commands[1] and self.client_flag:
+            packets=self.make_packet(command[0],command[1])
+            self.dl.send(1,packets[0])
 
 
     def receive(self, buffer):
@@ -33,6 +34,10 @@ class Application_Layer:
                 self.make_file()
         elif commd == self.commands[3] and not self.client_flag:
             self.send_file(str(data))
+        elif commd==self.commands[1] and not self.client_flag:
+            self.calculate(str(data))
+        elif commd == self.commands[2] and self.client_flag:
+            print("Result :",data )
         elif commd == "EXIT":
             self.destroy()
 
@@ -85,3 +90,13 @@ class Application_Layer:
                 f.write(self.received_buffer[i])
             f.flush()
         self.received_buffer = []
+
+    def calculate(self,expression):
+        command=self.commands[2]
+        try:
+            result=eval(expression)
+        except:
+            result="Not an valid expression,please try again"
+        finally:
+            buffer=self.make_packet(command,str(result))
+            self.dl.send(1,buffer[0])
