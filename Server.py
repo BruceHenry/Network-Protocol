@@ -9,6 +9,6 @@
 import time
 from Application_Layer import Application_Layer
 
-app = Application_Layer(0)
+app = Application_Layer(0, 1)
 while True:
     time.sleep(1)

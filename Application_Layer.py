@@ -9,21 +9,24 @@ import base64
 class Application_Layer:
     maxBytes = 256
     packet_format = 'COMMAND:{0}\nPIECES:{1}\nPIECENUM:{2}\nDATA:{3}'
-    commands = [ 'MSG', 'CALCULATE', 'RESPONSE','SENDFILE','UPLOAD']
+    commands = ['MSG', 'CALCULATE', 'RESPONSE', 'DOWNLOAD', 'UPLOAD']
 
-    def __init__(self, client_flag):
+    def __init__(self, client_flag, mode):
+        self.mode = mode
         self.dl = dataLinkLayer("127.0.0.1", 5555, client_flag, self)
         self.received_buffer = []
-        self.client_flag=client_flag
+        self.client_flag = client_flag
 
     def send(self, input):
         command = input.split(" ")
         if command[0] == self.commands[4] and self.client_flag:
             self.send_file(command[1])
         if command[0] == self.commands[1] and self.client_flag:
-            packets=self.make_packet(command[0],command[1])
-            self.dl.send(1,packets[0])
-
+            packets = self.make_packet(command[0], command[1])
+            self.dl.send(self.mode, packets[0])
+        if command[0] == self.commands[3] and self.client_flag:
+            packets = self.make_packet(command[0], command[1])
+            self.dl.send(self.mode, packets[0])
 
     def receive(self, buffer):
         # print("app received:", buffer, '\n----------')
@@ -34,10 +37,10 @@ class Application_Layer:
                 self.make_file()
         elif commd == self.commands[3] and not self.client_flag:
             self.send_file(str(data))
-        elif commd==self.commands[1] and not self.client_flag:
+        elif commd == self.commands[1] and not self.client_flag:
             self.calculate(str(data))
         elif commd == self.commands[2] and self.client_flag:
-            print("Result :",data )
+            print("Result :", data)
         elif commd == "EXIT":
             self.destroy()
 
@@ -69,34 +72,44 @@ class Application_Layer:
         # fileName = "D:/a.txt"
         fileName = file_path
         command = "FILE"
+        extension = self.get_extension(fileName)
+        extension_packet = self.packet_format.format(command, 1, 0, extension)
+        self.dl.send(self.mode, extension_packet)
         with open(fileName, 'r') as f:
             buffer = f.read()
             send_buffer = self.make_packet(command, buffer)
             for i in send_buffer:
                 while True:
-                    if self.dl.send(1, i):
+                    if self.dl.send(self.mode, i):
                         break
                     else:
                         time.sleep(0.5)
                         continue
                 # print("send:", i, "\n----------")
                 time.sleep(0.1)
+        print("The file has sent!")
 
     def make_file(self):
-        fileName = "Received_File.txt"
+        fileName = "Received_File" + '.' + self.received_buffer[0]
 
         with open(fileName, 'w') as f:
-            for i in range(0, len(self.received_buffer)):
+            for i in range(1, len(self.received_buffer)):
                 f.write(self.received_buffer[i])
             f.flush()
+        print("A file is received!")
         self.received_buffer = []
 
-    def calculate(self,expression):
-        command=self.commands[2]
+    def calculate(self, expression):
+        command = self.commands[2]
         try:
-            result=eval(expression)
+            result = eval(expression)
         except:
-            result="Not an valid expression,please try again"
+            result = "Not an valid expression,please try again"
         finally:
-            buffer=self.make_packet(command,str(result))
-            self.dl.send(1,buffer[0])
+            buffer = self.make_packet(command, str(result))
+            self.dl.send(self.mode, buffer[0])
+
+    def get_extension(self, file_url):
+        names = file_url.split(".")
+        extension = names[len(names) - 1]
+        return extension
