@@ -6,7 +6,7 @@ import random
 
 import time
 
-framesize = 1024
+framesize = 512
 chance_of_fail = 2
 chance_of_corruption = 2
 
@@ -84,15 +84,18 @@ class physicalLayer():
         f = Frame(data)
         try:
             if (is_dropped(chance_of_fail)):
-                #print('Corrupted frame')
+                # print('Corrupted frame')
                 pass
             else:
                 if (is_corrupted(chance_of_corruption)):
                     f.add_corruption()
-                self.soc.sendall(bytes(f.data, 'utf-8'))
+                padded_length = framesize - 1 - len(f.data) - len(str(len(f.data)))
+                padded_frame = f.data.ljust(len(f.data)+padded_length, ' ')
+                sent_frame = str(len(f.data)) + ' ' + padded_frame
+                self.soc.sendall(bytes(sent_frame, 'utf-8'))
         except:
             pass
-            #self.soc.close()
+            # self.soc.close()
 
     def destroy(self):
         self.soc.close()
@@ -103,9 +106,13 @@ def receive(dl):
     while (True):
         try:
             data = str(dl.soc.recv(framesize), 'utf-8')
+            padding=data.split(" ",1)
+            payload=padding[1][0:int(padding[0])]
+
+
         except:
             continue
         # print("phyical receiver:", data)
         if data == "":
             continue
-        dl.data_layer.receive(1, data)
+        dl.data_layer.receive(1, payload)
