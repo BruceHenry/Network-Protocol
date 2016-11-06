@@ -34,10 +34,7 @@ class dataLinkLayer:
         self.log = {"retransmission": 0,
                     "ack_sent": 0,
                     "ack_received": 0,
-                    "duplicate": 0,
-                    "start_time": 0,
-                    "end_time": 0,
-                    "time": 0,
+                    "data_length":0
                     }
 
     def send(self, mode, buffer):
@@ -78,6 +75,7 @@ class dataLinkLayer:
     def go_back_n_send(self, packet):
         # send
         if self.next_seq < self.base + self.windowSize:
+            self.log["data_length"]+=len(packet.buffer)
             self.send_buffer.append(packet)
             self.send_buffer[self.next_seq].set_seq_ack(self.next_seq, 0)
             self.p.send(self.make_packet(self.send_buffer[self.next_seq]))
@@ -93,6 +91,7 @@ class dataLinkLayer:
 
     def go_back_n_timeout(self):
         # Timeout
+        self.log["retransmission"]+=self.next_seq-self.base
         self.t.cancel()
         self.setTimer()
         self.t.start()
@@ -119,6 +118,7 @@ class dataLinkLayer:
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
             ack_pkt = packet("ACK")
             if (not valid and self.next_expected_seq == seq):
+                self.log["ack_sent"]+=1
                 ack_pkt.set_seq_ack(self.next_expected_seq, 1)
                 self.p.send(self.make_packet(ack_pkt))
                 self.next_expected_seq += 1
@@ -132,6 +132,7 @@ class dataLinkLayer:
                 self.p.send(self.make_packet(ack_pkt))
                 return False
         else:
+            self.log["ack_received"]+=1
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
             if (not valid and self.base <= int(seq)):
                 self.base = int(seq) + 1
