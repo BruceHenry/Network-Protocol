@@ -60,6 +60,7 @@ class physicalLayer():
         self.ip = ip
         self.port = port
         self.data_layer = data_layer
+        self.log = {"total_frame": 0, "total_data": 0, "drop_chance": 0, "corrupt_chance": 0}
         if not client_flag:
             self.client_flag = 0
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -90,8 +91,12 @@ class physicalLayer():
                 if (is_corrupted(chance_of_corruption)):
                     f.add_corruption()
                 padded_length = framesize - 1 - len(f.data) - len(str(len(f.data)))
-                padded_frame = f.data.ljust(len(f.data)+padded_length, ' ')
+                padded_frame = f.data.ljust(len(f.data) + padded_length, ' ')
                 sent_frame = str(len(f.data)) + ' ' + padded_frame
+                self.log['total_frame'] += 1
+                self.log['total_data'] += len(f.data)
+                self.log['drop_chance'] = chance_of_fail
+                self.log['corrupt_chance'] = chance_of_corruption
                 self.soc.sendall(bytes(sent_frame, 'utf-8'))
         except:
             pass
@@ -106,8 +111,8 @@ def receive(dl):
     while (True):
         try:
             data = str(dl.soc.recv(framesize), 'utf-8')
-            padding=data.split(" ",1)
-            payload=padding[1][0:int(padding[0])]
+            padding = data.split(" ", 1)
+            payload = padding[1][0:int(padding[0])]
 
 
         except:

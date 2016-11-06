@@ -9,7 +9,7 @@ import base64
 class Application_Layer:
     maxBytes = 256
     packet_format = 'COMMAND:{0}\nPIECES:{1}\nPIECENUM:{2}\nDATA:{3}'
-    commands = ['MSG', 'CALCULATE', 'RESPONSE', 'DOWNLOAD', 'UPLOAD']
+    commands = ['LOG', 'CALCULATE', 'RESPONSE', 'DOWNLOAD', 'UPLOAD']
 
     def __init__(self, client_flag, mode):
         self.mode = mode
@@ -21,12 +21,15 @@ class Application_Layer:
         command = input.split(" ")
         if command[0] == self.commands[4] and self.client_flag:
             self.send_file(command[1])
-        if command[0] == self.commands[1] and self.client_flag:
+        elif command[0] == self.commands[1] and self.client_flag:
+            packets = self.make_packet(command[0], command[1])
+            print(packets)
+            self.dl.send(self.mode, packets[0])
+        elif command[0] == self.commands[3] and self.client_flag:
             packets = self.make_packet(command[0], command[1])
             self.dl.send(self.mode, packets[0])
-        if command[0] == self.commands[3] and self.client_flag:
-            packets = self.make_packet(command[0], command[1])
-            self.dl.send(self.mode, packets[0])
+        else:
+            print("Invalid command!!!")
 
     def receive(self, buffer):
         # print("app received:", buffer, '\n----------')
@@ -37,12 +40,15 @@ class Application_Layer:
                 self.make_file()
         elif commd == self.commands[3] and not self.client_flag:
             self.send_file(str(data))
-        elif commd == self.commands[1] and not self.client_flag:
-            self.calculate(str(data))
         elif commd == self.commands[2] and self.client_flag:
             print("Result :", data)
+        elif commd == self.commands[1] and not self.client_flag:
+            self.calculate(str(data))
+        # elif commd == self.commands[0] and not self.client_flag:
+        #     self.write_log()
         elif commd == "EXIT":
             self.destroy()
+
 
     def make_packet(self, command, message):
         packets_to_send = []
@@ -113,3 +119,17 @@ class Application_Layer:
         names = file_url.split(".")
         extension = names[len(names) - 1]
         return extension
+
+    def write_log(self):
+        if self.client_flag == 1:
+            file_name = "Client_Log.txt"
+            # packets = self.make_packet(self.commands[0], "Write log")
+            # print(packets)
+            # self.dl.send(self.mode, packets)
+        else:
+            file_name = "Server_log.txt"
+        with open(file_name, 'a') as f:
+            f.write(str(self.dl.p.log))
+            f.write(str(self.dl.log))
+            f.write("\n")
+            f.flush()

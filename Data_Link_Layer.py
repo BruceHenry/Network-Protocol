@@ -27,9 +27,18 @@ class dataLinkLayer:
     next_seq = 0
 
     def __init__(self, ip, port, client_flag, application_layer):
+        self.client_flag = client_flag
         self.p = physicalLayer(ip, port, self, client_flag)
         self.app = application_layer
         self.t = self.timer(0.5)
+        self.log = {"retransmission": 0,
+                    "ack_sent": 0,
+                    "ack_received": 0,
+                    "duplicate": 0,
+                    "start_time": 0,
+                    "end_time": 0,
+                    "time": 0,
+                    }
 
     def send(self, mode, buffer):
         if mode == 1:
@@ -56,7 +65,6 @@ class dataLinkLayer:
                 return True
             else:
                 return False
-
 
     def make_packet(self, pkt):
         packet_without_checksum = str(pkt.seq) + str(pkt.ack) + pkt.buffer
