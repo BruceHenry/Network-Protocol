@@ -22,7 +22,7 @@ class Application_Layer:
                     }
 
     def send(self, input):
-        self.start_time=time()
+        self.start_time=time.time()
         command = input.split(" ")
         if command[0] == self.commands[4] and self.client_flag:
             self.send_file(command[1])
@@ -35,12 +35,12 @@ class Application_Layer:
             self.dl.send(self.mode, packets[0])
         else:
             print("Invalid command!!!")
-        self.endtime=time()
+        self.endtime=time.time()
         self.log["time"]+=self.endtime-self.start_time
 
     def receive(self, buffer):
         # print("app received:", buffer, '\n----------')
-        self.start_time = time()
+        self.start_time = time.time()
         commd, numpieces, piece, data = self.parse_packet(buffer)
         if commd == "FILE":
             self.received_buffer.append(data)
@@ -59,7 +59,7 @@ class Application_Layer:
             self.endtime = time()
             self.log["time"] += self.endtime - self.start_time
 
-        self.endtime = time()
+        self.endtime =time.time()
         self.log["time"] += self.endtime - self.start_time
 
 
@@ -144,6 +144,6 @@ class Application_Layer:
         with open(file_name, 'a') as f:
             f.write(str(self.dl.p.log))
             f.write(str(self.dl.log))
-            f.write(self.log)
+            f.write(str(self.log))
             f.write("\n")
             f.flush()
