@@ -5,6 +5,7 @@ import socketserver
 import random
 
 import time
+from Server import mode
 
 framesize = 512
 chance_of_fail = 0
@@ -116,4 +117,4 @@ def receive(dl):
         # print("phyical receiver:", data)
         if data == "":
             continue
-        dl.data_layer.receive(2, payload)
+        dl.data_layer.receive(mode, payload)

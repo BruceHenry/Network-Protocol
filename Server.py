@@ -10,8 +10,9 @@ import time
 from Application_Layer import Application_Layer
 import atexit
 
+mode = 1
 
-app = Application_Layer(0, 2)
+app = Application_Layer(0, mode)
 
 @atexit.register
 def goodbye():
