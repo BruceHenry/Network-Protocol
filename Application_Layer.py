@@ -12,31 +12,34 @@ class Application_Layer:
     commands = ['LOG', 'CALCULATE', 'RESPONSE', 'DOWNLOAD', 'UPLOAD']
 
     def __init__(self, client_flag, mode):
-        self.start_time=0
-        self.endtime=0
+        self.start_time = 0
+        self.endtime = 0
         self.mode = mode
         self.dl = dataLinkLayer("127.0.0.1", 5555, client_flag, self)
         self.received_buffer = []
         self.client_flag = client_flag
-        self.log = {"time":0
+        self.log = {"time": 0,
+                    "mode":mode
                     }
 
     def send(self, input):
-        self.start_time=time.time()
+        self.start_time = time.time()
         command = input.split(" ")
         if command[0] == self.commands[4] and self.client_flag:
             self.send_file(command[1])
+        elif command[0] == self.commands[3] and self.client_flag:
+            packets = self.make_packet(command[0], command[1])
+            self.dl.send(self.mode, packets[0])
         elif command[0] == self.commands[1] and self.client_flag:
             packets = self.make_packet(command[0], command[1])
             print(packets)
             self.dl.send(self.mode, packets[0])
-        elif command[0] == self.commands[3] and self.client_flag:
-            packets = self.make_packet(command[0], command[1])
-            self.dl.send(self.mode, packets[0])
+        elif command[0] == self.commands[0] and self.client_flag:
+            self.write_log()
         else:
             print("Invalid command!!!")
-        self.endtime=time.time()
-        self.log["time"]+=self.endtime-self.start_time
+        self.endtime = time.time()
+        self.log["time"] += self.endtime - self.start_time
 
     def receive(self, buffer):
         # print("app received:", buffer, '\n----------')
@@ -59,9 +62,8 @@ class Application_Layer:
             self.endtime = time()
             self.log["time"] += self.endtime - self.start_time
 
-        self.endtime =time.time()
+        self.endtime = time.time()
         self.log["time"] += self.endtime - self.start_time
-
 
     def make_packet(self, command, message):
         packets_to_send = []
@@ -147,3 +149,4 @@ class Application_Layer:
             f.write(str(self.log))
             f.write("\n")
             f.flush()
+            print("Log has been written")

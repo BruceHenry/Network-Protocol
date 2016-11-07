@@ -7,8 +7,8 @@ import random
 import time
 
 framesize = 512
-chance_of_fail = 2
-chance_of_corruption = 2
+chance_of_fail = 0
+chance_of_corruption = 10
 
 
 def is_dropped(chance_of_fail):

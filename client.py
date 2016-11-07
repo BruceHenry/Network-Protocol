@@ -16,10 +16,10 @@ import _thread
 
 
 app = Application_Layer(1, 1)
-print("Please input:\nUPLOAD [File URL]\nDOWNLOAD [File URL]\nCALCULATE [expression]")
+print("Please input:\nUPLOAD [File URL]\nDOWNLOAD [File URL]\nCALCULATE [expression]\nLOG")
 while True:
     command = input()
     app.send(command)
-    print("Press any key to write log")
-    write_log = input()
-    app.write_log()
+    # print("Press any key to write log")
+    # write_log = input()
+    # app.write_log()

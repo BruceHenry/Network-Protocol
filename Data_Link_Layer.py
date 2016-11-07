@@ -34,7 +34,8 @@ class dataLinkLayer:
         self.log = {"retransmission": 0,
                     "ack_sent": 0,
                     "ack_received": 0,
-                    "data_length":0
+                    "data_length":0,
+                    "dup":0
                     }
 
     def send(self, mode, buffer):
@@ -134,6 +135,8 @@ class dataLinkLayer:
         else:
             self.log["ack_received"]+=1
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
+            if not valid and self.base>int(seq):
+                self.log["dup"]+=1
             if (not valid and self.base <= int(seq)):
                 self.base = int(seq) + 1
                 if self.base == self.next_seq:
