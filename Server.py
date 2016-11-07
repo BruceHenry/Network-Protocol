@@ -8,7 +8,15 @@
 
 import time
 from Application_Layer import Application_Layer
+import atexit
 
-app = Application_Layer(0, 1)
+
+app = Application_Layer(0, 2)
+
+@atexit.register
+def goodbye():
+    app.dl.p.destroy()
+
 while True:
     time.sleep(1)
+

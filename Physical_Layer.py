@@ -64,16 +64,12 @@ class physicalLayer():
         if not client_flag:
             self.client_flag = 0
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             serversocket.bind((self.ip, self.port))
             serversocket.listen(5)
             print("Server running and listening for client")
             self.soc, addr = serversocket.accept()
             _thread.start_new_thread(receive, (self,))
-            # self.server = ThreadedTCPServer(('localhost', self.port), physicalRequestHandler)
-            # self.server_thread = threading.Thread(target=self.server.serve_forever)
-            # self.server_thread.daemon = True
-            # self.server_thread.start()
-            # print("Server loop running in thread:", self.server_thread.name)
         else:
             self.client_flag = 1
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -120,4 +116,4 @@ def receive(dl):
         # print("phyical receiver:", data)
         if data == "":
             continue
-        dl.data_layer.receive(1, payload)
+        dl.data_layer.receive(2, payload)
