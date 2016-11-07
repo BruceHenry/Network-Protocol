@@ -4,12 +4,12 @@ import threading
 import socketserver
 import random
 
+
 import time
-from Server import mode
+from constant import *
 
 framesize = 512
-chance_of_fail = 0
-chance_of_corruption = 10
+
 
 
 def is_dropped(chance_of_fail):

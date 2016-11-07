@@ -9,8 +9,9 @@
 import time
 from Application_Layer import Application_Layer
 import atexit
+from constant import mode
 
-mode = 1
+#mode = 1
 
 app = Application_Layer(0, mode)
 

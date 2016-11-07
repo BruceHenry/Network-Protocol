@@ -4,6 +4,8 @@ import os
 import math
 import time
 import base64
+import csv
+from constant import *
 
 
 class Application_Layer:
@@ -136,17 +138,27 @@ class Application_Layer:
         return extension
 
     def write_log(self):
+        row_values=[mode,chance_of_corruption,chance_of_fail,self.dl.p.log["total_frame"],
+                    self.dl.p.log["total_data"],
+                    self.dl.log["retransmission"],
+                    self.dl.log["ack_sent"],
+                    self.dl.log["ack_received"],
+                    self.dl.log["data_length"],
+                    self.dl.log["dup"],
+                    self.log["time"]]
         if self.client_flag == 1:
-            file_name = "Client_Log.txt"
+            file_name = "Client_Log.csv"
             # packets = self.make_packet(self.commands[0], "Write log")
             # print(packets)
             # self.dl.send(self.mode, packets)
         else:
-            file_name = "Server_log.txt"
+            file_name = "Server_log.csv"
         with open(file_name, 'a') as f:
-            f.write(str(self.dl.p.log))
-            f.write(str(self.dl.log))
-            f.write(str(self.log))
-            f.write("\n")
-            f.flush()
+            writer = csv.writer(f, dialect='excel')
+            writer.writerow(row_values)
+            # f.write(str(self.dl.p.log))
+            # f.write(str(self.dl.log))
+            # f.write(str(self.log))
+            # f.write("\n")
+            # f.flush()
             print("Log has been written")

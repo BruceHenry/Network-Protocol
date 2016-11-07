@@ -39,8 +39,8 @@ class dataLinkLayer:
         self.log = {"retransmission": 0,
                     "ack_sent": 0,
                     "ack_received": 0,
-                    "data_length":0,
-                    "dup":0
+                    "data_length": 0,
+                    "dup": 0
                     }
 
     def send(self, mode, buffer):
@@ -97,7 +97,7 @@ class dataLinkLayer:
 
     def go_back_n_timeout(self):
         # Timeout
-        self.log["retransmission"]+=self.next_seq-self.base
+        self.log["retransmission"] += self.next_seq - self.base
         self.t.cancel()
         self.setTimer()
         self.t.start()
@@ -106,7 +106,7 @@ class dataLinkLayer:
             print("timeout re-send", self.send_buffer[i].seq, self.send_buffer[i].ack)
 
     def selective_repeat_timeout(self, seqnum):
-        self.log["retransmission"]+=self.next_seq-self.base
+        self.log["retransmission"] += self.next_seq - self.base
         print(seqnum)
         self.timers[seqnum].cancel()
         self.addTimer(seqnum)
@@ -145,10 +145,10 @@ class dataLinkLayer:
                 self.p.send(self.make_packet(ack_pkt))
                 return False
         else:
-            self.log["ack_received"]+=1
+            self.log["ack_received"] += 1
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
-            if not valid and self.base>int(seq):
-                self.log["dup"]+=1
+            if not valid and self.base > int(seq):
+                self.log["dup"] += 1
             if (not valid and self.base <= int(seq)):
                 self.base = int(seq) + 1
                 if self.base == self.next_seq:
@@ -213,8 +213,6 @@ class dataLinkLayer:
             self.next_seq += 1
             return True
 
-
-
     def selective_repeat_receiver(self, buffer):
 
         print("selective_repeat_receiver:", buffer[:22])
@@ -230,7 +228,7 @@ class dataLinkLayer:
             return False
 
         if not ack:
-            print ("GOT DATA.")
+            print("GOT DATA.")
             print(self.ichecksum(str(seq) + str(ack) + data, checksum))
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
             corrupted = True
@@ -241,7 +239,7 @@ class dataLinkLayer:
                 print("VALID PACKET")
                 self.receive_buffer.append(packet)
                 self.marked.append(seq)
-                while(self.next_expected_seq in self.marked):
+                while (self.next_expected_seq in self.marked):
                     print("SENDING DATA UP")
                     self.next_expected_seq += 1
                     self.app.receive(data)
@@ -254,14 +252,13 @@ class dataLinkLayer:
                     self.need_ack = False
 
         else:
-            self.log["ack_received"]+=1
+            self.log["ack_received"] += 1
             print("RECEIVED ACK FOR %i" % (seq))
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
+            if not valid and self.base > int(seq):
+                self.log["dup"] += 1
             if (not valid and self.base <= int(seq)):
                 while self.base < seq:
                     self.timers[self.base].cancel()
                     del self.timers[self.base]
                     self.base += 1
-
-
-
