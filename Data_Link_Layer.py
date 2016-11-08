@@ -235,21 +235,25 @@ class dataLinkLayer:
             if not valid:
                 corrupted = False
 
+            print (self.next_expected_seq)
+            print (seq)
+
             if self.next_expected_seq + self.windowSize > seq >= self.next_expected_seq and seq not in self.marked and not corrupted:
                 print("VALID PACKET")
                 self.receive_buffer.append(packet)
                 self.marked.append(seq)
+                print (self.next_expected_seq)
                 while (self.next_expected_seq in self.marked):
                     print("SENDING DATA UP")
                     self.next_expected_seq += 1
                     self.app.receive(data)
                     self.need_ack = True
-                if self.need_ack:
                     ack_pkt = packet("ACK")
                     self.log["ack_sent"] += 1
                     ack_pkt.set_seq_ack(self.next_expected_seq, 1)
                     self.p.send(self.make_packet(ack_pkt))
                     self.need_ack = False
+
 
         else:
             self.log["ack_received"] += 1
@@ -257,8 +261,14 @@ class dataLinkLayer:
             valid = self.ichecksum(str(seq) + str(ack) + data, checksum)
             if not valid and self.base > int(seq):
                 self.log["dup"] += 1
+            print (self.base)
+            print (seq)
             if (not valid and self.base <= int(seq)):
+                if self.base == seq:
+                    self.timers[self.base].cancel()
+                    del self.timers[self.base]
                 while self.base < seq:
                     self.timers[self.base].cancel()
                     del self.timers[self.base]
                     self.base += 1
+
